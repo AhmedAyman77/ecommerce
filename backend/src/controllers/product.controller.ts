@@ -98,7 +98,6 @@ export async function deleteProduct(req: Request, res: Response) {
 
 export async function getRecommendedProducts(_: Request, res: Response) {
   try {
-    // For SQL databases, we'll just get random 4 products
     const allProducts = await productDAO.findAll();
     const shuffled = allProducts.sort(() => 0.5 - Math.random());
     const recommended = shuffled.slice(0, 4).map(p => ({

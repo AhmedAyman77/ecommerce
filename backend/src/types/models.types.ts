@@ -1,12 +1,15 @@
-export interface User {
+interface BaseEntity {
     _id?: string;
+    createdAt?: Date;
+    updatedAt?: Date;
+}
+
+export interface User extends BaseEntity {
     name: string;
     email: string;
     password: string;
     role: 'customer' | 'admin';
     cartItems: CartItem[];
-    createdAt?: Date;
-    updatedAt?: Date;
 }
 
 export interface CartItem {
@@ -14,26 +17,20 @@ export interface CartItem {
     quantity: number;
 }
 
-export interface Product {
-    _id?: string;
+export interface Product extends BaseEntity {
     name: string;
     description: string;
     price: number;
     image: string;
     category: string;
     isFeatured: boolean;
-    createdAt?: Date;
-    updatedAt?: Date;
 }
 
-export interface Order {
-    _id?: string;
+export interface Order extends BaseEntity {
     user: string;
     products: OrderProduct[];
     totalAmount: number;
     stripeSessionId: string;
-    createdAt?: Date;
-    updatedAt?: Date;
 }
 
 export interface OrderProduct {
@@ -42,13 +39,10 @@ export interface OrderProduct {
     price: number;
 }
 
-export interface Coupon {
-    _id?: string;
+export interface Coupon extends BaseEntity {
     code: string;
     discountPercentage: number;
     expirationDate: Date;
     isActive: boolean;
     userId: string;
-    createdAt?: Date;
-    updatedAt?: Date;
 }

@@ -2,20 +2,20 @@ import { DatabaseConnection } from './connection/DBConnections';
 import { SQLiteConnection } from './connection/SQLiteConnection';
 import { SQLServerConnection } from './connection/SQLServerConnection';
 
-import { UserDAO } from './DAO/UserDAO';
-import { ProductDAO } from './DAO/ProductDAO';
-import { OrderDAO } from './DAO/OrderDAO';
 import { CouponDAO } from './DAO/CouponDAO';
+import { OrderDAO } from './DAO/OrderDAO';
+import { ProductDAO } from './DAO/ProductDAO';
+import { UserDAO } from './DAO/UserDAO';
 
-import { SQLiteUserDAO } from './implementations/sqlite/SQLiteUserDAO';
-import { SQLiteProductDAO } from './implementations/sqlite/SQLiteProductDAO';
-import { SQLiteOrderDAO } from './implementations/sqlite/SQLiteOrderDAO';
 import { SQLiteCouponDAO } from './implementations/sqlite/SQLiteCouponDAO';
+import { SQLiteOrderDAO } from './implementations/sqlite/SQLiteOrderDAO';
+import { SQLiteProductDAO } from './implementations/sqlite/SQLiteProductDAO';
+import { SQLiteUserDAO } from './implementations/sqlite/SQLiteUserDAO';
 
-import { SQLServerUserDAO } from './implementations/sqlserver/SQLServerUserDAO';
-import { SQLServerProductDAO } from './implementations/sqlserver/SQLServerProductDAO';
-import { SQLServerOrderDAO } from './implementations/sqlserver/SQLServerOrderDAO';
 import { SQLServerCouponDAO } from './implementations/sqlserver/SQLServerCouponDAO';
+import { SQLServerOrderDAO } from './implementations/sqlserver/SQLServerOrderDAO';
+import { SQLServerProductDAO } from './implementations/sqlserver/SQLServerProductDAO';
+import { SQLServerUserDAO } from './implementations/sqlserver/SQLServerUserDAO';
 
 import { databaseConfig } from '../config/db.config';
 import { DatabaseType } from '../types/db.types';
@@ -29,18 +29,24 @@ export class DAOFactory {
     private couponDAO: CouponDAO | null = null;
 
     private constructor() {
-        if (databaseConfig.type === DatabaseType.sqlite) {
-            this.connection = new SQLiteConnection(databaseConfig.sqlite!.filename);
-        } else if (databaseConfig.type === DatabaseType.sqlserver) {
-            this.connection = new SQLServerConnection({
-                server: databaseConfig.sqlserver!.server,
-                database: databaseConfig.sqlserver!.database,
-                user: databaseConfig.sqlserver!.user,
-                password: databaseConfig.sqlserver!.password,
-                options: databaseConfig.sqlserver!.options,
-            });
-        } else {
-            throw new Error(`Unsupported database type: ${databaseConfig.type}`);
+        switch (databaseConfig.type) {
+            case DatabaseType.sqlite:
+                this.connection = new SQLiteConnection(databaseConfig.filename);
+                break;
+            
+            case DatabaseType.sqlserver:
+                this.connection = new SQLServerConnection({
+                    server: databaseConfig.server,
+                    database: databaseConfig.database,
+                    user: databaseConfig.user,
+                    password: databaseConfig.password,
+                    options: databaseConfig.options,
+                });
+                break;
+            
+            default:
+                // ?? return RHS if LHS is null or undefined
+                throw new Error(`Unsupported database type: ${(databaseConfig as any).type ?? 'unknown'}`);
         }
     }
 

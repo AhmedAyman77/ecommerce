@@ -1,10 +1,10 @@
-import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
+import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import { DAOFactory } from '../databases/DAOFactory';
 import { env } from '../config/env.config';
 import { redisClient } from '../config/redis';
-import { ConflictError, AuthenticationError, NotFoundError, ValidationError } from '../types/error.types';
+import { DAOFactory } from '../databases/DAOFactory';
+import { AuthenticationError, ConflictError, NotFoundError, ValidationError } from '../types/error.types';
 
 const userDAO = DAOFactory.getInstance().getUserDAO();
 
@@ -13,11 +13,11 @@ interface TokenPayload {
 }
 
 const generateTokens = (userId: string) => {
-  const accessToken = jwt.sign({ userId }, env.ACCESS_TOKEN_SECRET, {
+  const accessToken = jwt.sign({ userId }, env.ACCESS_TOKEN_SECRET!, {
     expiresIn: '15m',
   });
 
-  const refreshToken = jwt.sign({ userId }, env.REFRESH_TOKEN_SECRET, {
+  const refreshToken = jwt.sign({ userId }, env.REFRESH_TOKEN_SECRET!, {
     expiresIn: '7d',
   });
 
@@ -86,12 +86,13 @@ export async function login(req: Request, res: Response) {
   const user = await userDAO.findByEmail(email);
 
   if (!user) {
-    throw new AuthenticationError('Invalid email');
+    // Invalid email or password prevents brute-force attacks by not revealing which one is incorrect
+    throw new AuthenticationError('Invalid email or password');
   }
 
   const isValid = await bcrypt.compare(password, user.password);
   if (!isValid) {
-    throw new AuthenticationError('Invalid password');
+    throw new AuthenticationError('Invalid email or password');
   }
 
   const { accessToken, refreshToken } = generateTokens(user._id!);
@@ -109,8 +110,12 @@ export async function login(req: Request, res: Response) {
 export async function logout(req: Request, res: Response) {
   const refreshToken = req.cookies.refreshToken;
   if (refreshToken) {
-    const decoded = jwt.verify(refreshToken, env.REFRESH_TOKEN_SECRET) as TokenPayload;
-    await redisClient.del(`refresh_token:${decoded.userId}`);
+    try {
+      const decoded = jwt.verify(refreshToken, env.REFRESH_TOKEN_SECRET!) as TokenPayload;
+      await redisClient.del(`refresh_token:${decoded.userId}`);
+    } catch (err) {
+      console.error('Error during logout:', err);
+    }
   }
 
   res.clearCookie('accessToken');
@@ -125,14 +130,14 @@ export async function refreshToken(req: Request, res: Response) {
     throw new AuthenticationError('Refresh token missing');
   }
 
-  const decoded = jwt.verify(refreshToken, env.REFRESH_TOKEN_SECRET) as TokenPayload;
+  const decoded = jwt.verify(refreshToken, env.REFRESH_TOKEN_SECRET!) as TokenPayload;
   const storedToken = await redisClient.get(`refresh_token:${decoded.userId}`);
 
   if (storedToken !== refreshToken) {
     throw new AuthenticationError('Invalid refresh token');
   }
 
-  const accessToken = jwt.sign({ userId: decoded.userId }, env.ACCESS_TOKEN_SECRET, {
+  const accessToken = jwt.sign({ userId: decoded.userId }, env.ACCESS_TOKEN_SECRET!, {
     expiresIn: '15m',
   });
 

@@ -32,7 +32,7 @@ class AuthService {
 
   verifyToken(token: string): TokenPayload {
     try {
-      return jwt.verify(token, env.ACCESS_TOKEN_SECRET) as TokenPayload;
+      return jwt.verify(token, env.ACCESS_TOKEN_SECRET!) as TokenPayload;
     } catch (error) {
       throw new Error('Invalid or expired token');
     }

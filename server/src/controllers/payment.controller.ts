@@ -82,32 +82,36 @@ export async function checkoutSuccess(req: Request, res: Response) {
 
   const session = await getStripe().checkout.sessions.retrieve(sessionId);
 
-  if (session.payment_status === 'paid') {
-    if (session.metadata?.couponCode) {
-      const coupon = await couponDAO.findByCode(session.metadata.couponCode);
-      if (coupon) {
-        await couponDAO.deactivate(coupon._id!);
-      }
-    }
-
-    const products = JSON.parse(session.metadata?.products || '[]');
-    const newOrder = await orderDAO.create({
-      user: session.metadata?.userId || '',
-      products: products.map((product: any) => ({
-        product: product.id,
-        quantity: product.quantity,
-        price: product.price,
-      })),
-      totalAmount: (session.amount_total || 0) / 100,
-      stripeSessionId: sessionId,
-    });
-
-    res.status(200).json({
-      success: true,
-      message: 'Payment successful, order created, and coupon deactivated if used.',
-      orderId: newOrder._id,
+  if (session.payment_status !== 'paid') {
+    return res.status(400).json({
+      success: false,
+      message: 'Payment not completed yet',
     });
   }
+  if (session.metadata?.couponCode) {
+    const coupon = await couponDAO.findByCode(session.metadata.couponCode);
+    if (coupon) {
+      await couponDAO.deactivate(coupon._id!);
+    }
+  }
+
+  const products = JSON.parse(session.metadata?.products || '[]');
+  const newOrder = await orderDAO.create({
+    user: session.metadata?.userId || '',
+    products: products.map((product: any) => ({
+      product: product.id,
+      quantity: product.quantity,
+      price: product.price,
+    })),
+    totalAmount: (session.amount_total || 0) / 100,
+    stripeSessionId: sessionId,
+  });
+
+  res.status(200).json({
+    success: true,
+    message: 'Payment successful, order created, and coupon deactivated if used.',
+    orderId: newOrder._id,
+  });
 }
 
 async function createStripeCoupon(discountPercentage: number): Promise<string> {

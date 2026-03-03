@@ -49,29 +49,12 @@ export async function addToCart(req: Request, res: Response) {
   res.json(cart);
 }
 
-export async function removeAllFromCart(req: Request, res: Response) {
-  if (!req.user?._id) {
-    throw new AuthorizationError('User not authenticated');
-  }
-
-  const { productId } = req.body;
-  
-  if (!productId) {
-    await userDAO.clearCart(req.user._id);
-  } else {
-    await userDAO.removeFromCart(req.user._id, productId);
-  }
-
-  const cart = await userDAO.getCart(req.user._id);
-  res.json(cart);
-}
-
 export async function updateQuantity(req: Request, res: Response) {
   if (!req.user?._id) {
     throw new AuthorizationError('User not authenticated');
   }
 
-  const { id: productId } = req.params;
+  const { productId } = req.params;
   const { quantity } = req.body;
 
   if (quantity === 0) {
@@ -82,6 +65,19 @@ export async function updateQuantity(req: Request, res: Response) {
     await userDAO.addToCart(req.user._id, productId, quantity);
   }
 
+  const cart = await userDAO.getCart(req.user._id);
+  res.json(cart);
+}
+
+export async function removeProductFromCart(req: Request, res: Response) {
+  if (!req.user?._id) {
+    throw new AuthorizationError('User not authenticated');
+  }
+  
+  const { productId } = req.params;
+  console.log(`Removing product ${productId} from user ${req.user._id}'s cart`);
+  await userDAO.removeFromCart(req.user._id, productId);
+  
   const cart = await userDAO.getCart(req.user._id);
   res.json(cart);
 }

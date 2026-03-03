@@ -1,13 +1,16 @@
-import { loadStripe } from "@stripe/stripe-js";
-import { motion } from "framer-motion";
-import { MoveRight } from "lucide-react";
-import { Link } from "react-router-dom";
-import { useCartStore } from "../stores/useCartStore.js";
-import axios from "../lib/axios.js";
+import { loadStripe } from '@stripe/stripe-js';
+import { motion } from 'framer-motion';
+import { MoveRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useCartStore } from '../stores/useCartStore';
+import axiosInstance from '../lib/axios';
 
-const stripePromise = loadStripe(
-	"pk_test_51SfCwJIuMtMbHuDRf2hY2wQTZ0DvXTBYaBa8lmCJKKoHedobFjH57jjMWm6u6fokHjXeK0UKvDr5BEl5LQ0lb0jL00O0Dr1OVa" // Replace with your Stripe publishable key
-);
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY as string);
+
+interface CheckoutSessionResponse {
+	id: string;
+	totalAmount: number;
+}
 
 const OrderSummary = () => {
 	const { total, subtotal, coupon, isCouponApplied, cart } = useCartStore();
@@ -19,18 +22,18 @@ const OrderSummary = () => {
 
 	const handlePayment = async () => {
 		const stripe = await stripePromise;
-		const res = await axios.post("/payments/create-checkout-session", {
+		if (!stripe) return;
+
+		const res = await axiosInstance.post<CheckoutSessionResponse>('/payments/create-checkout-session', {
 			products: cart,
 			couponCode: coupon ? coupon.code : null,
 		});
 
 		const session = res.data;
-		const result = await stripe.redirectToCheckout({
-			sessionId: session.id,
-		});
+		const result = await stripe.redirectToCheckout({ sessionId: session.id });
 
 		if (result.error) {
-			console.error("Error:", result.error);
+			console.error('Stripe error:', result.error);
 		}
 	};
 
@@ -63,6 +66,7 @@ const OrderSummary = () => {
 							<dd className='text-base font-medium text-emerald-400'>-{coupon.discountPercentage}%</dd>
 						</dl>
 					)}
+
 					<dl className='flex items-center justify-between gap-4 border-t border-gray-600 pt-2'>
 						<dt className='text-base font-bold text-white'>Total</dt>
 						<dd className='text-base font-bold text-emerald-400'>${formattedTotal}</dd>
@@ -92,4 +96,5 @@ const OrderSummary = () => {
 		</motion.div>
 	);
 };
+
 export default OrderSummary;

@@ -103,6 +103,14 @@ export class SQLiteProductDAO extends ProductDAO {
         );
         return this.findById(id);
     }
+    async findRandom(count: number): Promise<Product[]> {
+        const results = await this.connection.query(
+            'SELECT * FROM products ORDER BY RANDOM() LIMIT ?',
+            [count]
+        );
+        
+        return results
+    }
 
     private mapToProduct(row: any): Product {
         return {

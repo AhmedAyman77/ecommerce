@@ -1,11 +1,21 @@
-import { useEffect, useState } from "react";
-import { ShoppingCart, ChevronLeft, ChevronRight } from "lucide-react";
-import { useCartStore } from "../stores/useCartStore.js";
+import { useEffect, useState } from 'react';
+import { ShoppingCart, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useCartStore } from '../stores/useCartStore';
 
-const FeaturedProducts = ({ featuredProducts }) => {
+interface Product {
+	_id: string;
+	name: string;
+	price: number;
+	image: string;
+}
+
+interface FeaturedProductsProps {
+	featuredProducts: Product[];
+}
+
+const FeaturedProducts = ({ featuredProducts }: FeaturedProductsProps) => {
 	const [currentIndex, setCurrentIndex] = useState(0);
 	const [itemsPerPage, setItemsPerPage] = useState(4);
-
 	const { addToCart } = useCartStore();
 
 	useEffect(() => {
@@ -17,17 +27,12 @@ const FeaturedProducts = ({ featuredProducts }) => {
 		};
 
 		handleResize();
-		window.addEventListener("resize", handleResize);
-		return () => window.removeEventListener("resize", handleResize);
+		window.addEventListener('resize', handleResize);
+		return () => window.removeEventListener('resize', handleResize);
 	}, []);
 
-	const nextSlide = () => {
-		setCurrentIndex((prevIndex) => prevIndex + itemsPerPage);
-	};
-
-	const prevSlide = () => {
-		setCurrentIndex((prevIndex) => prevIndex - itemsPerPage);
-	};
+	const nextSlide = () => setCurrentIndex((prev) => prev + itemsPerPage);
+	const prevSlide = () => setCurrentIndex((prev) => prev - itemsPerPage);
 
 	const isStartDisabled = currentIndex === 0;
 	const isEndDisabled = currentIndex >= featuredProducts.length - itemsPerPage;
@@ -42,7 +47,7 @@ const FeaturedProducts = ({ featuredProducts }) => {
 							className='flex transition-transform duration-300 ease-in-out'
 							style={{ transform: `translateX(-${currentIndex * (100 / itemsPerPage)}%)` }}
 						>
-							{featuredProducts?.map((product) => (
+							{featuredProducts.map((product) => (
 								<div key={product._id} className='w-full sm:w-1/2 lg:w-1/3 xl:w-1/4 flex-shrink-0 px-2'>
 									<div className='bg-white bg-opacity-10 backdrop-blur-sm rounded-lg shadow-lg overflow-hidden h-full transition-all duration-300 hover:shadow-xl border border-emerald-500/30'>
 										<div className='overflow-hidden'>
@@ -58,9 +63,8 @@ const FeaturedProducts = ({ featuredProducts }) => {
 												${product.price.toFixed(2)}
 											</p>
 											<button
-												onClick={() => addToCart(product)}
-												className='w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2 px-4 rounded transition-colors duration-300 
-												flex items-center justify-center'
+												onClick={() => addToCart(product as any)}
+												className='w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2 px-4 rounded transition-colors duration-300 flex items-center justify-center'
 											>
 												<ShoppingCart className='w-5 h-5 mr-2' />
 												Add to Cart
@@ -71,11 +75,12 @@ const FeaturedProducts = ({ featuredProducts }) => {
 							))}
 						</div>
 					</div>
+
 					<button
 						onClick={prevSlide}
 						disabled={isStartDisabled}
 						className={`absolute top-1/2 -left-4 transform -translate-y-1/2 p-2 rounded-full transition-colors duration-300 ${
-							isStartDisabled ? "bg-gray-400 cursor-not-allowed" : "bg-emerald-600 hover:bg-emerald-500"
+							isStartDisabled ? 'bg-gray-400 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-500'
 						}`}
 					>
 						<ChevronLeft className='w-6 h-6' />
@@ -85,7 +90,7 @@ const FeaturedProducts = ({ featuredProducts }) => {
 						onClick={nextSlide}
 						disabled={isEndDisabled}
 						className={`absolute top-1/2 -right-4 transform -translate-y-1/2 p-2 rounded-full transition-colors duration-300 ${
-							isEndDisabled ? "bg-gray-400 cursor-not-allowed" : "bg-emerald-600 hover:bg-emerald-500"
+							isEndDisabled ? 'bg-gray-400 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-500'
 						}`}
 					>
 						<ChevronRight className='w-6 h-6' />
@@ -95,4 +100,5 @@ const FeaturedProducts = ({ featuredProducts }) => {
 		</div>
 	);
 };
+
 export default FeaturedProducts;

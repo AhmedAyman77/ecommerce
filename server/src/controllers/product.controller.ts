@@ -34,7 +34,12 @@ export async function createProduct(req: Request, res: Response) {
   let cloudinaryResponse = null;
 
   if (image) {
-    cloudinaryResponse = await uploader.upload(image, { folder: 'products' });
+    try {
+      cloudinaryResponse = await uploader.upload(image, { folder: 'products' });
+    } catch (error) {
+      console.error('Error uploading image to cloudinary', error);
+      return res.status(500).json({ message: 'Failed to upload image' });
+    }
   }
 
   const product = await productDAO.create({
@@ -78,17 +83,15 @@ export async function deleteProduct(req: Request, res: Response) {
 }
 
 export async function getRecommendedProducts(_: Request, res: Response) {
-  const allProducts = await productDAO.findAll();
-  const shuffled = allProducts.sort(() => 0.5 - Math.random());
-  const recommended = shuffled.slice(0, 4).map(p => ({
+  const recommendedProducts = await productDAO.findRandom(10);
+  const recommendedProductsReduced = recommendedProducts.map(p => ({
     _id: p._id,
     name: p.name,
     description: p.description,
     image: p.image,
     price: p.price,
   }));
-
-  res.json(recommended);
+  res.json(recommendedProductsReduced);
 }
 
 export async function getProductsByCategory(req: Request, res: Response) {

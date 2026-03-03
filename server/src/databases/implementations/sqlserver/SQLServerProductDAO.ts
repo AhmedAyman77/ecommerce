@@ -105,6 +105,14 @@ export class SQLServerProductDAO extends ProductDAO {
         return this.findById(id);
     }
 
+    async findRandom(count: number): Promise<Product[]> {
+        const results = await this.connection.query(
+            'SELECT TOP (@count) * FROM products ORDER BY NEWID()',
+            [count]
+        );
+        return results;
+    }
+
     private mapToProduct(row: any): Product {
         return {
             _id: row._id,

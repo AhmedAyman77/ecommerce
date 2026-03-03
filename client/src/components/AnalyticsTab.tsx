@@ -1,27 +1,63 @@
-import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
-import axios from "../lib/axios";
-import { Users, Package, ShoppingCart, DollarSign } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import axiosInstance from '../lib/axios';
+import { Users, Package, ShoppingCart, DollarSign, LucideIcon } from 'lucide-react';
+import {
+	LineChart,
+	Line,
+	XAxis,
+	YAxis,
+	CartesianGrid,
+	Tooltip,
+	Legend,
+	ResponsiveContainer,
+} from 'recharts';
+import { AxiosError } from 'axios';
+
+interface AnalyticsData {
+	users: number;
+	products: number;
+	totalSales: number;
+	totalRevenue: number;
+}
+
+interface DailySalesEntry {
+	date: string;
+	sales: number;
+	revenue: number;
+}
+
+interface AnalyticsResponse {
+	analyticsData: AnalyticsData;
+	dailySalesData: DailySalesEntry[];
+}
+
+interface AnalyticsCardProps {
+	title: string;
+	value: string;
+	icon: LucideIcon;
+	color: string;
+}
 
 const AnalyticsTab = () => {
-	const [analyticsData, setAnalyticsData] = useState({
+	const [analyticsData, setAnalyticsData] = useState<AnalyticsData>({
 		users: 0,
 		products: 0,
 		totalSales: 0,
 		totalRevenue: 0,
 	});
 	const [isLoading, setIsLoading] = useState(true);
-	const [dailySalesData, setDailySalesData] = useState([]);
+	const [dailySalesData, setDailySalesData] = useState<DailySalesEntry[]>([]);
 
 	useEffect(() => {
 		const fetchAnalyticsData = async () => {
 			try {
-				const response = await axios.get("/analytics");
+				const response = await axiosInstance.get<AnalyticsResponse>('/analytics');
 				setAnalyticsData(response.data.analyticsData);
 				setDailySalesData(response.data.dailySalesData);
 			} catch (error) {
-				console.error("Error fetching analytics data:", error);
+				const err = error as AxiosError;
+				console.error('Error fetching analytics data:', err.message);
 			} finally {
 				setIsLoading(false);
 			}
@@ -30,9 +66,7 @@ const AnalyticsTab = () => {
 		fetchAnalyticsData();
 	}, []);
 
-	if (isLoading) {
-		return <div>Loading...</div>;
-	}
+	if (isLoading) return <div>Loading...</div>;
 
 	return (
 		<div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
@@ -62,6 +96,7 @@ const AnalyticsTab = () => {
 					color='from-emerald-500 to-lime-700'
 				/>
 			</div>
+
 			<motion.div
 				className='bg-gray-800/60 rounded-lg p-6 shadow-lg'
 				initial={{ opacity: 0, y: 20 }}
@@ -71,7 +106,7 @@ const AnalyticsTab = () => {
 				<ResponsiveContainer width='100%' height={400}>
 					<LineChart data={dailySalesData}>
 						<CartesianGrid strokeDasharray='3 3' />
-						<XAxis dataKey='name' stroke='#D1D5DB' />
+						<XAxis dataKey='date' stroke='#D1D5DB' />
 						<YAxis yAxisId='left' stroke='#D1D5DB' />
 						<YAxis yAxisId='right' orientation='right' stroke='#D1D5DB' />
 						<Tooltip />
@@ -98,9 +133,10 @@ const AnalyticsTab = () => {
 		</div>
 	);
 };
+
 export default AnalyticsTab;
 
-const AnalyticsCard = ({ title, value, icon: Icon, color }) => (
+const AnalyticsCard = ({ title, value, icon: Icon, color }: AnalyticsCardProps) => (
 	<motion.div
 		className={`bg-gray-800 rounded-lg p-6 shadow-lg overflow-hidden relative ${color}`}
 		initial={{ opacity: 0, y: 20 }}

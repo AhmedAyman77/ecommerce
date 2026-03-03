@@ -1,9 +1,19 @@
-import { Link } from "react-router-dom";
+import { Link } from 'react-router-dom';
 
-const CategoryItem = ({ category }) => {
+interface Category {
+	href: string;
+	name: string;
+	imageUrl: string;
+}
+
+interface CategoryItemProps {
+	category: Category;
+}
+
+const CategoryItem = ({ category }: CategoryItemProps) => {
 	return (
 		<div className='relative overflow-hidden h-96 w-full rounded-lg group'>
-			<Link to={"/category" + category.href}>
+			<Link to={'/category' + category.href}>
 				<div className='w-full h-full cursor-pointer'>
 					<div className='absolute inset-0 bg-gradient-to-b from-transparent to-gray-900 opacity-50 z-10' />
 					<img

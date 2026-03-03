@@ -1,31 +1,32 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Toaster } from 'react-hot-toast';
 
-import HomePage from "./pages/HomePage.jsx";
-import SignUpPage from "./pages/SignUpPage.jsx";
-import LoginPage from "./pages/LoginPage.jsx";
-import AdminPage from "./pages/AdminPage.jsx";
-import CategoryPage from "./pages/CategoryPage.jsx";
+import HomePage from './pages/HomePage';
+import SignUpPage from './pages/SignUpPage';
+import LoginPage from './pages/LoginPage';
+import AdminPage from './pages/AdminPage';
+import CategoryPage from './pages/CategoryPage';
+import CartPage from './pages/CartPage';
+import PurchaseSuccessPage from './pages/PurchaseSuccessPage';
+import PurchaseCancelPage from './pages/PurchaseCancelPage';
 
-import Navbar from "./components/Navbar.jsx";
-import { Toaster } from "react-hot-toast";
-import { useUserStore } from "./stores/useUserStore.js";
-import { useEffect } from "react";
-import LoadingSpinner from "./components/LoadingSpinner.jsx";
-import CartPage from "./pages/CartPage.jsx";
-import { useCartStore } from "./stores/useCartStore.js";
-import PurchaseSuccessPage from "./pages/PurchaseSuccessPage.jsx";
-import PurchaseCancelPage from "./pages/PurchaseCancelPage.jsx";
+import Navbar from './components/Navbar';
+import LoadingSpinner from './components/LoadingSpinner';
+
+import { useUserStore } from './stores/useUserStore';
+import { useCartStore } from './stores/useCartStore';
 
 function App() {
   const { user, checkAuth, checkingAuth } = useUserStore();
   const { getCartItems } = useCartStore();
+
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
 
   useEffect(() => {
     if (!user) return;
-
     getCartItems();
   }, [getCartItems, user]);
 
@@ -48,7 +49,7 @@ function App() {
           <Route path='/login' element={!user ? <LoginPage /> : <Navigate to='/' />} />
           <Route
             path='/secret-dashboard'
-            element={user?.role === "admin" ? <AdminPage /> : <Navigate to='/login' />}
+            element={user?.role === 'admin' ? <AdminPage /> : <Navigate to='/login' />}
           />
           <Route path='/category/:category' element={<CategoryPage />} />
           <Route path='/cart' element={user ? <CartPage /> : <Navigate to='/login' />} />
@@ -56,7 +57,10 @@ function App() {
             path='/purchase-success'
             element={user ? <PurchaseSuccessPage /> : <Navigate to='/login' />}
           />
-          <Route path='/purchase-cancel' element={user ? <PurchaseCancelPage /> : <Navigate to='/login' />} />
+          <Route
+            path='/purchase-cancel'
+            element={user ? <PurchaseCancelPage /> : <Navigate to='/login' />}
+          />
         </Routes>
       </div>
       <Toaster />

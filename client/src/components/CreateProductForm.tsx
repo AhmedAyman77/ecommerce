@@ -10,7 +10,6 @@ interface NewProduct {
 	description: string;
 	price: string;
 	category: string;
-	image: string;
 }
 
 const CreateProductForm = () => {
@@ -19,19 +18,29 @@ const CreateProductForm = () => {
 		description: '',
 		price: '',
 		category: '',
-		image: '',
 	});
+	const [imageFile, setImageFile] = useState<File | null>(null);
+	const [imagePreview, setImagePreview] = useState<string>('');
 
 	const { createProduct, loading } = useProductStore();
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		try {
-			await createProduct({
-				...newProduct,
-				price: Number(newProduct.price),
-			});
-			setNewProduct({ name: '', description: '', price: '', category: '', image: '' });
+			// Build FormData — multipart/form-data, not JSON
+			const formData = new FormData();
+			formData.append('name', newProduct.name);
+			formData.append('description', newProduct.description);
+			formData.append('price', newProduct.price);
+			formData.append('category', newProduct.category);
+			if (imageFile) {
+				formData.append('image', imageFile); // raw file, not base64
+			}
+
+			await createProduct(formData);
+			setNewProduct({ name: '', description: '', price: '', category: '' });
+			setImageFile(null);
+			setImagePreview('');
 		} catch {
 			console.log('error creating a product');
 		}
@@ -40,11 +49,9 @@ const CreateProductForm = () => {
 	const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
 		if (file) {
-			const reader = new FileReader();
-			reader.onloadend = () => {
-				setNewProduct({ ...newProduct, image: reader.result as string });
-			};
-			reader.readAsDataURL(file);
+			setImageFile(file);
+			// Preview via object URL — no base64 conversion needed
+			setImagePreview(URL.createObjectURL(file));
 		}
 	};
 
@@ -125,8 +132,14 @@ const CreateProductForm = () => {
 					</select>
 				</div>
 
-				<div className='mt-1 flex items-center'>
-					<input type='file' id='image' className='sr-only' accept='image/*' onChange={handleImageChange} />
+				<div className='mt-1 flex items-center gap-4'>
+					<input
+						type='file'
+						id='image'
+						className='sr-only'
+						accept='image/*'
+						onChange={handleImageChange}
+					/>
 					<label
 						htmlFor='image'
 						className='cursor-pointer bg-gray-700 py-2 px-3 border border-gray-600 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-300 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500'
@@ -134,7 +147,14 @@ const CreateProductForm = () => {
 						<Upload className='h-5 w-5 inline-block mr-2' />
 						Upload Image
 					</label>
-					{newProduct.image && <span className='ml-3 text-sm text-gray-400'>Image uploaded</span>}
+
+					{imagePreview && (
+						<img
+							src={imagePreview}
+							alt='Preview'
+							className='h-16 w-16 object-cover rounded-md border border-gray-600'
+						/>
+					)}
 				</div>
 
 				<button

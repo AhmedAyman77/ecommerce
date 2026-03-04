@@ -17,7 +17,7 @@ interface ProductStore {
 	products: Product[];
 	loading: boolean;
 	setProducts: (products: Product[]) => void;
-	createProduct: (productData: Omit<Product, "_id" | "isFeatured">) => Promise<void>;
+	createProduct: (formData: FormData) => Promise<void>;
 	fetchAllProducts: () => Promise<void>;
 	fetchProductsByCategory: (category: string) => Promise<void>;
 	deleteProduct: (productId: string) => Promise<void>;
@@ -31,10 +31,12 @@ export const useProductStore = create<ProductStore>((set) => ({
 
 	setProducts: (products) => set({ products }),
 
-	createProduct: async (productData) => {
+	createProduct: async (formData) => {
 		set({ loading: true });
 		try {
-			const res = await axiosInstance.post<Product>("/products", productData);
+			const res = await axiosInstance.post<Product>("/products", formData, {
+			headers: { "Content-Type": "multipart/form-data" },
+		});
 			set((prevState) => ({
 				products: [...prevState.products, res.data],
 				loading: false,

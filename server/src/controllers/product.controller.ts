@@ -1,8 +1,9 @@
 import { Request, Response } from 'express';
-import { DAOFactory } from '../databases/DAOFactory';
+import { uploader, uploadStream } from '../config/cloudinary';
 import { redisClient } from '../config/redis';
-import { uploader } from '../config/cloudinary';
-import { NotFoundError } from '../types/error.types';
+import { DAOFactory } from '../databases/DAOFactory';
+import { NotFoundError, ValidationError } from '../types/error.types';
+import { validate } from 'uuid';
 
 const productDAO = DAOFactory.getInstance().getProductDAO();
 
@@ -29,16 +30,24 @@ export async function getFeaturedProducts(_: Request, res: Response) {
 }
 
 export async function createProduct(req: Request, res: Response) {
-  const { name, description, price, image, category } = req.body;
+  const { name, description, price, category } = req.body;
+  const image = req.file;
+  if (!name || !description || !price || !category) {
+      throw new ValidationError('Name, description, price, and category are required');
+  }
 
-  let cloudinaryResponse = null;
+  if (isNaN(Number(price)) || Number(price) <= 0) {
+      throw new ValidationError('Price must be a positive number');
+  }
+
+  let imageUrl = '';
 
   if (image) {
     try {
-      cloudinaryResponse = await uploader.upload(image, { folder: 'products' });
-    } catch (error) {
-      console.error('Error uploading image to cloudinary', error);
-      return res.status(500).json({ message: 'Failed to upload image' });
+      const result = await uploadStream(image.buffer, 'products');
+      imageUrl = result.secure_url;
+    } catch (error: any) {
+      throw new ValidationError(`Image upload failed: ${error.message}`);
     }
   }
 
@@ -46,7 +55,7 @@ export async function createProduct(req: Request, res: Response) {
     name,
     description,
     price,
-    image: cloudinaryResponse?.secure_url || '',
+    image: imageUrl,
     category,
     isFeatured: false,
   });

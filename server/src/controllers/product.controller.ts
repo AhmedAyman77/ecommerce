@@ -3,7 +3,7 @@ import { uploader, uploadStream } from '../config/cloudinary';
 import { redisClient } from '../config/redis';
 import { DAOFactory } from '../databases/DAOFactory';
 import { NotFoundError, ValidationError } from '../types/error.types';
-import { validate } from 'uuid';
+import { esProductDAO } from '../databases/implementations/elasticsearch/ElasticsearchProductDAO';
 
 const productDAO = DAOFactory.getInstance().getProductDAO();
 
@@ -60,6 +60,8 @@ export async function createProduct(req: Request, res: Response) {
     isFeatured: false,
   });
 
+  await esProductDAO.index(product);
+
   res.status(201).json(product);
 }
 
@@ -87,6 +89,7 @@ export async function deleteProduct(req: Request, res: Response) {
   }
 
   await productDAO.delete(req.params.id);
+  await esProductDAO.remove(req.params.id);
 
   res.json({ message: 'Product deleted successfully' });
 }
@@ -117,6 +120,7 @@ export async function toggleFeaturedProduct(req: Request, res: Response) {
     }
 
     await updateFeaturedProductsCache();
+    await esProductDAO.index(product);
     res.json(product);
 }
 
@@ -133,4 +137,17 @@ async function removeOneFeaturedProductsCache(productId: string) {
     featuredProducts = featuredProducts.filter((product: any) => product._id !== productId);
     await redisClient.set('featured_products', JSON.stringify(featuredProducts));
   }
+}
+
+export async function searchProducts(req: Request, res: Response) {
+  const query = req.query.q as string;
+  const category = req.query.category as string | undefined;
+  
+  if (!query) {
+    throw new ValidationError('Search query (q) is required');
+  }
+
+  const products = await esProductDAO.search(query, category);
+
+  res.json({ products });
 }

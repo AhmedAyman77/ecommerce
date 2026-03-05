@@ -9,6 +9,8 @@ import { DAOFactory } from './databases/DAOFactory';
 import { MigrationManager } from './databases/migrations/MigrationManager';
 import { migrations } from './databases/migrations/index';
 import { errorHandler, notFoundHandler } from './middlewares/error.middleware';
+import { initElasticsearch } from './config/elasticsearch';
+import { esProductDAO } from './databases/implementations/elasticsearch/ElasticsearchProductDAO';
 import analyticsRoutes from './routes/analytics.route';
 import authRoutes from './routes/auth.route';
 import cartRoutes from './routes/cart.route';
@@ -76,6 +78,19 @@ export class Application {
         }
     }
 
+    private async initializeElasticSearch(): Promise<void> {
+        try {
+            await initElasticsearch();
+
+            // Sync existing products to Elasticsearch
+            const productDAO = this.daoFactory.getProductDAO();
+            const allProducts = await productDAO.findAll();
+            await esProductDAO.bulkIndex(allProducts);
+        } catch (error) {
+            console.error('Failed to initialize Elasticsearch:', error);
+        }
+    }
+
     private async shutdownDatabase(): Promise<void> {
         try {
             console.log('Closing database connection...');
@@ -93,7 +108,7 @@ export class Application {
             this.configureRoutes();
 
             await this.initializeDatabase();
-
+            await this.initializeElasticSearch();
             this.server = this.app.listen(env.PORT, () => {
                 console.log(`Server running on port ${env.PORT}`);
                 console.log(`API Documentation: http://localhost:${env.PORT}/api-docs`);

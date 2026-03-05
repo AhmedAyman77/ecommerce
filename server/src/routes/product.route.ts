@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getAllProducts, getFeaturedProducts, createProduct, deleteProduct, getRecommendedProducts, getProductsByCategory, toggleFeaturedProduct } from '../controllers/product.controller';
+import { getAllProducts, getFeaturedProducts, createProduct, deleteProduct, getRecommendedProducts, getProductsByCategory, toggleFeaturedProduct, searchProducts } from '../controllers/product.controller';
 import { requireAdmin, requireAuth } from '../middlewares/auth.middleware';
 import { asyncHandler } from '../middlewares/error.middleware';
 import { upload } from '../config/multer';
@@ -12,4 +12,5 @@ router.delete('/:id', requireAuth, requireAdmin, asyncHandler(deleteProduct));
 router.get('/recommendations', asyncHandler(getRecommendedProducts));
 router.get('/category/:category', asyncHandler(getProductsByCategory));
 router.patch('/toggle-featured/:id', requireAuth, requireAdmin, asyncHandler(toggleFeaturedProduct));
+router.get('/search', asyncHandler(searchProducts));
 export default router;

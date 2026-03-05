@@ -30,4 +30,6 @@ export const env = {
     REDIS_PASSWORD: process.env.REDIS_PASSWORD,
     REDIS_HOST: process.env.REDIS_HOST,
     REDIS_PORT: Number(process.env.REDIS_PORT || 6379),
+    ELASTICSEARCH_URL: process.env.ELASTICSEARCH_URL,
+    ELASTICSEARCH_API_KEY: process.env.ELASTICSEARCH_API_KEY
 };

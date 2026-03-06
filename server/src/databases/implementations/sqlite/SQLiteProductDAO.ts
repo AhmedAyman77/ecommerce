@@ -112,6 +112,18 @@ export class SQLiteProductDAO extends ProductDAO {
         return results
     }
 
+    async findByIds(ids: string[]): Promise<Product[]> {
+        if (ids.length === 0) return [];
+
+        const placeholders = ids.map(() => '?').join(', ');
+        const results = await this.connection.query(
+            `SELECT * FROM products WHERE _id IN (${placeholders})`,
+            ids
+        );
+        
+        return results.map((row: any) => this.mapToProduct(row));
+    }
+
     private mapToProduct(row: any): Product {
         return {
             _id: row._id,

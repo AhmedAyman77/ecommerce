@@ -228,7 +228,7 @@ export const swaggerSpec = swaggerJsdoc({
                     requestBody: {
                         required: true,
                         content: {
-                            'application/json': {
+                            'multipart/form-data': {
                                 schema: {
                                     type: 'object',
                                     required: ['name', 'description', 'price', 'category'],
@@ -236,7 +236,7 @@ export const swaggerSpec = swaggerJsdoc({
                                         name: { type: 'string' },
                                         description: { type: 'string' },
                                         price: { type: 'number' },
-                                        image: { type: 'string' },
+                                        image: { type: 'string', format: 'binary' },
                                         category: { type: 'string' },
                                     },
                                 },
@@ -267,11 +267,21 @@ export const swaggerSpec = swaggerJsdoc({
                     responses: { 200: { description: 'Product deleted' }, 404: { description: 'Product not found' } },
                 },
             },
-            '/api/products/recommended': {
+            '/api/products/recommendations': {
                 get: {
                     tags: ['Products'],
                     summary: 'Get recommended products',
                     responses: { 200: { description: 'Recommended products', content: { 'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/Product' } } } } } },
+                },
+            },
+            '/api/products/search': {
+                get: {
+                    tags: ['Products'],
+                    summary: 'Search products',
+                    parameters: [{ in: 'query', name: 'q', required: true, schema: { type: 'string' }, description: 'Search query' }],
+                    responses: { 
+                        200: { description: 'Search results', content: { 'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/Product' } } } } },
+                    },
                 },
             },
             '/api/products/category/{category}': {
@@ -288,7 +298,7 @@ export const swaggerSpec = swaggerJsdoc({
                 },
             },
             '/api/products/toggle-featured/{id}': {
-                post: {
+                patch: {
                     tags: ['Products'],
                     summary: 'Toggle product featured flag',
                     security: [{ cookieAuth: [] }],
@@ -303,8 +313,6 @@ export const swaggerSpec = swaggerJsdoc({
                     security: [{ cookieAuth: [] }],
                     responses: { 200: { description: 'Cart items' }, 401: { description: 'Unauthorized' } },
                 },
-            },
-            '/api/cart/add': {
                 post: {
                     tags: ['Cart'],
                     summary: 'Add product to cart',
@@ -313,26 +321,25 @@ export const swaggerSpec = swaggerJsdoc({
                     responses: { 200: { description: 'Updated cart' }, 401: { description: 'Unauthorized' } },
                 },
             },
-            '/api/cart/remove': {
-                post: {
+            '/api/cart/{productId}': {
+                delete: {
                     tags: ['Cart'],
-                    summary: 'Remove product from cart or clear cart',
+                    summary: 'Remove product from cart',
                     security: [{ cookieAuth: [] }],
-                    requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { productId: { type: 'string' } } } } } },
+                    parameters: [{ in: 'path', name: 'productId', required: true, schema: { type: 'string' } }],
                     responses: { 200: { description: 'Updated cart' }, 401: { description: 'Unauthorized' } },
                 },
-            },
-            '/api/cart/update': {
-                post: {
+                put: {
                     tags: ['Cart'],
                     summary: 'Update cart item quantity',
                     security: [{ cookieAuth: [] }],
-                    requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['productId', 'quantity'], properties: { productId: { type: 'string' }, quantity: { type: 'number' } } } } } },
+                    parameters: [{ in: 'path', name: 'productId', required: true, schema: { type: 'string' } }],
+                    requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['quantity'], properties: { quantity: { type: 'number' } } } } } },
                     responses: { 200: { description: 'Updated cart' }, 401: { description: 'Unauthorized' } },
                 },
             },
             '/api/coupons': {
-                post: {
+                get: {
                     tags: ['Coupons'],
                     summary: 'Get current user coupon',
                     security: [{ cookieAuth: [] }],

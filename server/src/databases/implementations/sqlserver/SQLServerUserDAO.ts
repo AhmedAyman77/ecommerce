@@ -126,6 +126,13 @@ export class SQLServerUserDAO extends UserDAO {
         return user?.cartItems || [];
     }
 
+    async removeProductFromAllCarts(productId: string): Promise<void> {
+        await this.connection.execute(
+            'DELETE FROM cart_items WHERE productId = @param0',
+            [productId]
+        );
+    }
+
     private mapToUser(row: any): User {
         return {
             _id: row._id,

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { DAOFactory } from '../databases/DAOFactory';
-import { AuthorizationError, NotFoundError, ValidationError } from '../types/error.types';
+import { AuthorizationError, ValidationError } from '../types/error.types';
 
 const userDAO = DAOFactory.getInstance().getUserDAO();
 const productDAO = DAOFactory.getInstance().getProductDAO();
@@ -10,15 +10,10 @@ export async function getCartProducts(req: Request, res: Response) {
     throw new AuthorizationError('User not authenticated');
   }
 
-  const user = await userDAO.findById(req.user._id);
-  if (!user) {
-    throw new NotFoundError('User not found');
-  }
+  const user = req.user;
 
   const productIds = user.cartItems.map(item => item.productId);
-  const products = await Promise.all(
-    productIds.map(id => productDAO.findById(id))
-  );
+  const products = await productDAO.findByIds(productIds);
 
   const cartItems = products
     .filter(p => p !== null)
@@ -75,7 +70,6 @@ export async function removeProductFromCart(req: Request, res: Response) {
   }
   
   const { productId } = req.params;
-  console.log(`Removing product ${productId} from user ${req.user._id}'s cart`);
   await userDAO.removeFromCart(req.user._id, productId);
   
   const cart = await userDAO.getCart(req.user._id);

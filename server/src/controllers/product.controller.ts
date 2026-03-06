@@ -4,8 +4,10 @@ import { redisClient } from '../config/redis';
 import { DAOFactory } from '../databases/DAOFactory';
 import { NotFoundError, ValidationError } from '../types/error.types';
 import { esProductDAO } from '../databases/implementations/elasticsearch/ElasticsearchProductDAO';
+import { UserDAO } from '../databases/DAO/UserDAO';
 
 const productDAO = DAOFactory.getInstance().getProductDAO();
+const userDAO = DAOFactory.getInstance().getUserDAO();
 
 export async function getAllProducts(_: Request, res: Response) {
   const products = await productDAO.findAll();
@@ -20,11 +22,9 @@ export async function getFeaturedProducts(_: Request, res: Response) {
 
   const featuredProducts = await productDAO.findFeatured();
 
-  if (!featuredProducts || featuredProducts.length === 0) {
-    throw new NotFoundError('No featured products found');
+  if (featuredProducts) {
+    await redisClient.set('featured_products', JSON.stringify(featuredProducts));
   }
-
-  await redisClient.set('featured_products', JSON.stringify(featuredProducts));
 
   res.json(featuredProducts);
 }
@@ -88,6 +88,8 @@ export async function deleteProduct(req: Request, res: Response) {
     await removeOneFeaturedProductsCache(req.params.id);
   }
 
+  await userDAO.removeProductFromAllCarts(req.params.id);
+  
   await productDAO.delete(req.params.id);
   await esProductDAO.remove(req.params.id);
 

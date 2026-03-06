@@ -113,6 +113,15 @@ export class SQLServerProductDAO extends ProductDAO {
         return results;
     }
 
+    async findByIds(ids: string[]): Promise<Product[]> {
+        if(ids.length === 0) return [];
+        
+        const placeholders = ids.map((_, index) => `@param${index}`).join(', ');
+        const query = `SELECT * FROM products WHERE _id IN (${placeholders})`;
+        const results = await this.connection.query(query, ids);
+        return results.map((row: any) => this.mapToProduct(row));
+    }
+    
     private mapToProduct(row: any): Product {
         return {
             _id: row._id,

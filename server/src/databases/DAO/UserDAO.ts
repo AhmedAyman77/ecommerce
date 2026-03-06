@@ -7,4 +7,5 @@ export abstract class UserDAO extends BaseDAO<User> {
     abstract removeFromCart(userId: string, productId: string): Promise<void>;
     abstract clearCart(userId: string): Promise<void>;
     abstract getCart(userId: string): Promise<CartItem[]>;
+    abstract removeProductFromAllCarts(productId: string): Promise<void>;
 }

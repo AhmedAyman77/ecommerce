@@ -88,9 +88,6 @@ export const useUserStore = create<UserStore>((set, get) => ({
 	},
 
 	refreshToken: async () => {
-		// Prevent multiple simultaneous refresh attempts
-		if (get().checkingAuth) return;
-
 		set({ checkingAuth: true });
 		try {
 			await axiosInstance.post("/auth/refresh-token");
@@ -110,10 +107,12 @@ axiosInstance.interceptors.response.use(
 	async (error: AxiosError) => {
 		const originalRequest = error.config as typeof error.config & { _retry?: boolean };
 
-		// Don't intercept auth routes — a 401 on login/signup/refresh is a real error,
-		// not an expired token. Intercepting these causes an infinite loop.
-		const isAuthRoute = originalRequest?.url?.includes("/auth/");
-		if (isAuthRoute) {
+		// Skip refresh for login, signup, and refresh-token routes only.
+		// /auth/profile is intentionally excluded so an expired token
+		// on app load triggers a refresh instead of logging the user out.
+		const skipRefreshRoutes = ["/auth/login", "/auth/signup", "/auth/refresh-token"];
+		const isSkippedRoute = skipRefreshRoutes.some(route => originalRequest?.url?.includes(route));
+		if (isSkippedRoute) {
 			return Promise.reject(error);
 		}
 

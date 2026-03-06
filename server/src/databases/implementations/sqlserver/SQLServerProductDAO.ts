@@ -107,7 +107,7 @@ export class SQLServerProductDAO extends ProductDAO {
 
     async findRandom(count: number): Promise<Product[]> {
         const results = await this.connection.query(
-            'SELECT TOP (@count) * FROM products ORDER BY NEWID()',
+            'SELECT TOP (@{count}) * FROM products ORDER BY NEWID()',
             [count]
         );
         return results;

@@ -140,13 +140,6 @@ export class SQLiteUserDAO extends UserDAO {
         return user?.cartItems || [];
     }
 
-    async removeProductFromAllCarts(productId: string): Promise<void> {
-        await this.connection.execute(
-            'DELETE FROM cart_items WHERE productId = ?',
-            [productId]
-        );
-    }
-
     private mapToUser(row: any): User {
         return {
             _id: row._id,

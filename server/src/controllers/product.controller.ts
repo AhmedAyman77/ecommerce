@@ -77,7 +77,6 @@ export async function deleteProduct(req: Request, res: Response) {
     if (publicId) {
       try {
         await uploader.destroy(`products/${publicId}`);
-        console.log('Deleted image from cloudinary');
       } catch (error) {
         console.error('Error deleting image from cloudinary', error);
       }
@@ -88,8 +87,12 @@ export async function deleteProduct(req: Request, res: Response) {
     await removeOneFeaturedProductsCache(req.params.id);
   }
 
-  await userDAO.removeProductFromAllCarts(req.params.id);
-  
+  const allUsers = await userDAO.findAll();
+
+  await Promise.all(allUsers.map(async (user) => {
+    await userDAO.removeFromCart(user._id!, req.params.id);
+  }));
+
   await productDAO.delete(req.params.id);
   await esProductDAO.remove(req.params.id);
 
@@ -153,3 +156,6 @@ export async function searchProducts(req: Request, res: Response) {
 
   res.json({ products });
 }
+
+
+

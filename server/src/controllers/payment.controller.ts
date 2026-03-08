@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { getStripe } from '../config/stripe';
 import { DAOFactory } from '../databases/DAOFactory';
-import { AuthorizationError, NotFoundError, ValidationError } from '../types/error.types';
+import { AuthorizationError, ValidationError } from '../types/error.types';
 
 const couponDAO = DAOFactory.getInstance().getCouponDAO();
 const orderDAO = DAOFactory.getInstance().getOrderDAO();
@@ -70,7 +70,7 @@ export async function createCheckoutSession(req: Request, res: Response) {
     await createNewCoupon(req.user._id);
   }
 
-  res.status(200).json({ id: session.id, totalAmount: totalAmount / 100 });
+  res.status(200).json({ id: session.id, url: session.url, totalAmount: totalAmount / 100 });
 }
 
 export async function checkoutSuccess(req: Request, res: Response) {

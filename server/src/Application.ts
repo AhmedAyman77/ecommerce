@@ -59,19 +59,20 @@ export class Application {
         this.app.use(errorHandler);
     }
 
-    private async initializeDatabase(): Promise<void> {
+    private async initializeDatabase(rollback: boolean): Promise<void> {
         try {
-            console.log('Initializing database...');
-            
             await this.daoFactory.connect();
-            console.log('Database connected successfully');
-            
             const migrationManager = new MigrationManager(
                 this.daoFactory.getConnection(),
                 migrations
             );
-            await migrationManager.runMigrations();
-            console.log('Database migrations completed');
+            if(!rollback) {
+                await migrationManager.runMigrations();
+                console.log('Database migrations completed');
+            } else {
+                await migrationManager.rollback();
+                console.log('Database rollback completed');
+            }
         } catch (error) {
             console.error('Failed to initialize database:', error);
             throw error;
@@ -107,7 +108,7 @@ export class Application {
             this.configureMiddleware();
             this.configureRoutes();
 
-            await this.initializeDatabase();
+            await this.initializeDatabase(false);
             await this.initializeElasticSearch();
             this.server = this.app.listen(env.PORT, () => {
                 console.log(`Server running on port ${env.PORT}`);

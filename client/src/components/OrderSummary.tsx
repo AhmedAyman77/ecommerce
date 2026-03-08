@@ -1,19 +1,20 @@
-import { loadStripe } from '@stripe/stripe-js';
 import { motion } from 'framer-motion';
 import { MoveRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCartStore } from '../stores/useCartStore';
 import axiosInstance from '../lib/axios';
-
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY as string);
+import toast from 'react-hot-toast';
+import { useState } from 'react';
 
 interface CheckoutSessionResponse {
 	id: string;
+	url: string;
 	totalAmount: number;
 }
 
 const OrderSummary = () => {
 	const { total, subtotal, coupon, isCouponApplied, cart } = useCartStore();
+	const [isLoading, setIsLoading] = useState(false);
 
 	const savings = subtotal - total;
 	const formattedSubtotal = subtotal.toFixed(2);
@@ -21,19 +22,27 @@ const OrderSummary = () => {
 	const formattedSavings = savings.toFixed(2);
 
 	const handlePayment = async () => {
-		const stripe = await stripePromise;
-		if (!stripe) return;
+		if (isLoading) return;
+		setIsLoading(true);
+		try {
+			const res = await axiosInstance.post<CheckoutSessionResponse>('/payments/checkout', {
+				products: cart,
+				couponCode: coupon ? coupon.code : null,
+			});
 
-		const res = await axiosInstance.post<CheckoutSessionResponse>('/payments/create-checkout-session', {
-			products: cart,
-			couponCode: coupon ? coupon.code : null,
-		});
+			if (!res.data.url) {
+				toast.error('Failed to get checkout URL from Stripe.');
+				return;
+			}
 
-		const session = res.data;
-		const result = await stripe.redirectToCheckout({ sessionId: session.id });
-
-		if (result.error) {
-			console.error('Stripe error:', result.error);
+			// Modern approach: redirect directly to Stripe's hosted checkout page
+			window.location.href = res.data.url;
+		} catch (error: any) {
+			const message = error?.response?.data?.message || error?.message || 'Checkout failed. Please try again.';
+			toast.error(message);
+			console.error('Checkout error:', error);
+		} finally {
+			setIsLoading(false);
 		}
 	};
 
@@ -74,12 +83,13 @@ const OrderSummary = () => {
 				</div>
 
 				<motion.button
-					className='flex w-full items-center justify-center rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-300'
-					whileHover={{ scale: 1.05 }}
-					whileTap={{ scale: 0.95 }}
+					className='flex w-full items-center justify-center rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-300 disabled:opacity-60 disabled:cursor-not-allowed'
+					whileHover={{ scale: isLoading ? 1 : 1.05 }}
+					whileTap={{ scale: isLoading ? 1 : 0.95 }}
 					onClick={handlePayment}
+					disabled={isLoading}
 				>
-					Proceed to Checkout
+					{isLoading ? 'Redirecting to Stripe...' : 'Proceed to Checkout'}
 				</motion.button>
 
 				<div className='flex items-center justify-center gap-2'>

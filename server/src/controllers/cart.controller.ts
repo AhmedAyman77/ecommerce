@@ -6,7 +6,6 @@ const userDAO = DAOFactory.getInstance().getUserDAO();
 const productDAO = DAOFactory.getInstance().getProductDAO();
 
 export async function getCartProducts(req: Request, res: Response) {
-  console.log('Get cart products endpoint hit');
   if (!req.user?._id) {
     throw new AuthorizationError('User not authenticated');
   }

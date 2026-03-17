@@ -66,10 +66,6 @@ export async function createCheckoutSession(req: Request, res: Response) {
     },
   });
 
-  if (totalAmount >= 20000) {
-    await createNewCoupon(req.user._id);
-  }
-
   res.status(200).json({ id: session.id, url: session.url, totalAmount: totalAmount / 100 });
 }
 
@@ -81,7 +77,7 @@ export async function checkoutSuccess(req: Request, res: Response) {
   }
 
   const session = await getStripe().checkout.sessions.retrieve(sessionId);
-
+  
   if (session.payment_status !== 'paid') {
     return res.status(400).json({
       success: false,
@@ -94,7 +90,7 @@ export async function checkoutSuccess(req: Request, res: Response) {
       await couponDAO.deactivate(coupon._id!);
     }
   }
-
+  
   const products = JSON.parse(session.metadata?.products || '[]');
   const newOrder = await orderDAO.create({
     user: session.metadata?.userId || '',
@@ -106,6 +102,10 @@ export async function checkoutSuccess(req: Request, res: Response) {
     totalAmount: (session.amount_total || 0) / 100,
     stripeSessionId: sessionId,
   });
+  
+  if (session.amount_total! / 100 >= 20000) {
+    await createNewCoupon(session.metadata?.userId!);
+  }
 
   res.status(200).json({
     success: true,

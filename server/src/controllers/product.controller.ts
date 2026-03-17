@@ -4,7 +4,6 @@ import { redisClient } from '../config/redis';
 import { DAOFactory } from '../databases/DAOFactory';
 import { NotFoundError, ValidationError } from '../types/error.types';
 import { esProductDAO } from '../databases/implementations/elasticsearch/ElasticsearchProductDAO';
-import { UserDAO } from '../databases/DAO/UserDAO';
 
 const productDAO = DAOFactory.getInstance().getProductDAO();
 const userDAO = DAOFactory.getInstance().getUserDAO();

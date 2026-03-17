@@ -11,7 +11,6 @@ import { migrations } from './databases/migrations/index';
 import { errorHandler, notFoundHandler } from './middlewares/error.middleware';
 import { initElasticsearch } from './config/elasticsearch';
 import { esProductDAO } from './databases/implementations/elasticsearch/ElasticsearchProductDAO';
-import analyticsRoutes from './routes/analytics.route';
 import authRoutes from './routes/auth.route';
 import cartRoutes from './routes/cart.route';
 import couponRoutes from './routes/coupon.route';
@@ -45,7 +44,6 @@ export class Application {
         this.app.use('/api/cart', cartRoutes);
         this.app.use('/api/coupons', couponRoutes);
         this.app.use('/api/payments', paymentRoutes);
-        this.app.use('/api/analytics', analyticsRoutes);
 
         this.app.get('/api/health', (_, res) => {
             res.json({ 

@@ -16,6 +16,7 @@ import cartRoutes from './routes/cart.route';
 import couponRoutes from './routes/coupon.route';
 import paymentRoutes from './routes/payment.route';
 import productRoutes from './routes/product.route';
+import { securityHeaders, rateLimit } from './middlewares/security.middleware';
 import './types/express';
 
 export class Application {
@@ -31,7 +32,9 @@ export class Application {
 
     private configureMiddleware(): void {
         this.app.use(cors({ origin: env.CLIENT_URL, credentials: true }));
-        this.app.use(express.json());
+        this.app.use(securityHeaders);
+        this.app.use(rateLimit.global);
+        this.app.use(express.json({limit: '10mb'}));
         this.app.use(cookieParser());
 
         this.app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));

@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import { env } from '../config/env.config';
 import { redisClient } from '../config/redis';
 import { DAOFactory } from '../databases/DAOFactory';
-import { AuthenticationError, ConflictError, NotFoundError, ValidationError } from '../types/error.types';
+import { AuthenticationError, ConflictError, NotFoundError } from '../types/error.types';
 
 const userDAO = DAOFactory.getInstance().getUserDAO();
 
@@ -45,10 +45,6 @@ const setCookies = (res: Response, accessToken: string, refreshToken: string) =>
 
 export async function signup(req: Request, res: Response) {
   const { name, email, password } = req.body;
-
-  if (!name || !email || !password) {
-    throw new ValidationError('Name, email, and password are required');
-  }
   
   const existing = await userDAO.findByEmail(email);
   if (existing) {
@@ -78,10 +74,6 @@ export async function signup(req: Request, res: Response) {
 
 export async function login(req: Request, res: Response) {
   const { email, password } = req.body;
-  
-  if(!email || !password) {
-    throw new ValidationError('Email and password are required');
-  }
 
   const user = await userDAO.findByEmail(email);
 

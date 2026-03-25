@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { DAOFactory } from '../databases/DAOFactory';
-import { AuthorizationError, ValidationError } from '../types/error.types';
+import { AuthorizationError } from '../types/error.types';
 
 const userDAO = DAOFactory.getInstance().getUserDAO();
 const productDAO = DAOFactory.getInstance().getProductDAO();
@@ -33,9 +33,6 @@ export async function addToCart(req: Request, res: Response) {
   }
 
   const { productId } = req.body;
-  if (!productId) {
-    throw new ValidationError('Product ID is required');
-  }
 
   await userDAO.addToCart(req.user._id, productId, 1);
   

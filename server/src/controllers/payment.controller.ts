@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { getStripe } from '../config/stripe';
 import { DAOFactory } from '../databases/DAOFactory';
-import { AuthorizationError, ValidationError } from '../types/error.types';
+import { AuthorizationError } from '../types/error.types';
 import { redisClient } from '../config/redis';
 
 const couponDAO = DAOFactory.getInstance().getCouponDAO();
@@ -15,10 +15,6 @@ export async function createCheckoutSession(req: Request, res: Response) {
   }
 
   const { products, couponCode } = req.body;
-
-  if (!Array.isArray(products) || products.length === 0) {
-    throw new ValidationError('No products provided for checkout');
-  }
   
   let totalAmount = 0;
   
@@ -74,10 +70,6 @@ export async function createCheckoutSession(req: Request, res: Response) {
 
 export async function checkoutSuccess(req: Request, res: Response) {
   const { sessionId } = req.body;
-
-  if(!sessionId) {
-    throw new ValidationError('Session ID is required');
-  }
 
   // Redis lock
   const lockKey = `lock:checkout:${sessionId}`;

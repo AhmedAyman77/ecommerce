@@ -31,13 +31,6 @@ export async function getFeaturedProducts(_: Request, res: Response) {
 export async function createProduct(req: Request, res: Response) {
   const { name, description, price, category } = req.body;
   const image = req.file;
-  if (!name || !description || !price || !category) {
-      throw new ValidationError('Name, description, price, and category are required');
-  }
-
-  if (isNaN(Number(price)) || Number(price) <= 0) {
-      throw new ValidationError('Price must be a positive number');
-  }
 
   let imageUrl = '';
 
@@ -146,10 +139,6 @@ async function removeOneFeaturedProductsCache(productId: string) {
 export async function searchProducts(req: Request, res: Response) {
   const query = req.query.q as string;
   const category = req.query.category as string | undefined;
-  
-  if (!query) {
-    throw new ValidationError('Search query (q) is required');
-  }
 
   const products = await esProductDAO.search(query, category);
 

@@ -34,11 +34,11 @@ function makeArcjetLimiter(max: number, windowSeconds: number) {
 }
 
 const limiters = {
-  login: makeArcjetLimiter(10,  15 * 60),
-  signup: makeArcjetLimiter(5,   60 * 60),
-  checkout: makeArcjetLimiter(20,  60 * 60),
-  search: makeArcjetLimiter(60,       60),
-  global: makeArcjetLimiter(200, 15 * 60),
+  login: makeArcjetLimiter(10, 60),
+  signup: makeArcjetLimiter(5, 60),
+  checkout: makeArcjetLimiter(20, 60),
+  search: makeArcjetLimiter(60, 60),
+  global: makeArcjetLimiter(200, 60),
 };
 
 function makeMiddleware(limiter: ReturnType<typeof arcjet>) {

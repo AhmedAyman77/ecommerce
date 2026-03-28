@@ -12,35 +12,21 @@ interface TokenPayload {
   userId: string;
 }
 
-const generateTokens = (userId: string) => {
-  const accessToken = jwt.sign({ userId }, env.ACCESS_TOKEN_SECRET!, {
-    expiresIn: '15m',
-  });
-
-  const refreshToken = jwt.sign({ userId }, env.REFRESH_TOKEN_SECRET!, {
-    expiresIn: '7d',
-  });
-
-  return { accessToken, refreshToken };
+export const generateTokens = (userId: string) => {
+  return {
+    accessToken:  jwt.sign({ userId }, env.ACCESS_TOKEN_SECRET!, { expiresIn: '15m' }),
+    refreshToken: jwt.sign({ userId }, env.REFRESH_TOKEN_SECRET!, { expiresIn: '7d' }),
+  };
 };
 
-const storeRefreshToken = async (userId: string, refreshToken: string) => {
+export const storeRefreshToken = async (userId: string, refreshToken: string) => {
   await redisClient.setEx(`refresh_token:${userId}`, 7 * 24 * 60 * 60, refreshToken);
 };
 
-const setCookies = (res: Response, accessToken: string, refreshToken: string) => {
-  res.cookie('accessToken', accessToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    maxAge: 15 * 60 * 1000,
-  });
-  res.cookie('refreshToken', refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
+export const setCookies = (res: Response, accessToken: string, refreshToken: string) => {
+  const opts = { httpOnly: true, secure: env.NODE_ENV === 'production', sameSite: 'strict' as const };
+  res.cookie('accessToken',  accessToken,  { ...opts, maxAge: 15 * 60 * 1000 });
+  res.cookie('refreshToken', refreshToken, { ...opts, maxAge: 7 * 24 * 60 * 60 * 1000 });
 };
 
 export async function signup(req: Request, res: Response) {

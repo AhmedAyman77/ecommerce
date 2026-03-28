@@ -8,9 +8,9 @@ export class SQLiteUserDAO extends UserDAO {
         const now = new Date().toISOString();
         
         await this.connection.execute(
-            `INSERT INTO users (_id, name, email, password, role, cartItems, createdAt, updatedAt)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-            [id, user.name, user.email, user.password, user.role, JSON.stringify(user.cartItems || []), now, now]
+            `INSERT INTO users (_id, name, email, password, role, cartItems, oauthProvider, oauthId, createdAt, updatedAt)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [id, user.name, user.email, user.password, user.role, JSON.stringify(user.cartItems || []), user.oauthProvider, user.oauthId, now, now]
         );
         
         return { ...user, _id: id, createdAt: new Date(now), updatedAt: new Date(now) };
@@ -76,6 +76,14 @@ export class SQLiteUserDAO extends UserDAO {
             updates.push('role = ?');
             values.push(user.role);
         }
+        if (user.oauthId !== undefined) {
+            updates.push('oauthId = ?');
+            values.push(user.oauthId);
+        }
+        if (user.oauthProvider !== undefined) {
+            updates.push('oauthProvider = ?');
+            values.push(user.oauthProvider);
+        }
 
         updates.push('updatedAt = ?');
         values.push(new Date().toISOString());
@@ -140,6 +148,16 @@ export class SQLiteUserDAO extends UserDAO {
         return user?.cartItems || [];
     }
 
+    async findByOAuth(provider: string, oauthId: string): Promise<User | null> {
+        const results = await this.connection.query(
+            'SELECT * FROM users WHERE oauthProvider = ? AND oauthId = ?',
+            [provider, oauthId]
+        );
+        if (results.length === 0) return null;
+        return this.mapToUser(results[0]);
+    }
+
+
     private mapToUser(row: any): User {
         return {
             _id: row._id,
@@ -148,6 +166,8 @@ export class SQLiteUserDAO extends UserDAO {
             password: row.password,
             role: row.role,
             cartItems: JSON.parse(row.cartItems || '[]'),
+            oauthProvider: row.oauthProvider,
+            oauthId: row.oauthId,
             createdAt: new Date(row.createdAt),
             updatedAt: new Date(row.updatedAt),
         };

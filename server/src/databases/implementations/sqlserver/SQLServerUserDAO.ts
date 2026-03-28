@@ -8,9 +8,9 @@ export class SQLServerUserDAO extends UserDAO {
         const now = new Date();
         
         await this.connection.execute(
-            `INSERT INTO users (_id, name, email, password, role, cartItems, createdAt, updatedAt)
-            VALUES (@param0, @param1, @param2, @param3, @param4, @param5, @param6, @param7)`,
-            [id, user.name, user.email, user.password, user.role, JSON.stringify(user.cartItems || []), now, now]
+            `INSERT INTO users (_id, name, email, password, role, cartItems, oauthProvider, oauthId, createdAt, updatedAt)
+            VALUES (@param0, @param1, @param2, @param3, @param4, @param5, @param6, @param7, @param8, @param9)`,
+            [id, user.name, user.email, user.password, user.role, JSON.stringify(user.cartItems || []), user.oauthProvider, user.oauthId, now, now]
         );
         
         return { ...user, _id: id, createdAt: now, updatedAt: now };
@@ -61,6 +61,14 @@ export class SQLServerUserDAO extends UserDAO {
         if (user.role !== undefined) {
             updates.push(`role = @param${paramIndex++}`);
             values.push(user.role);
+        }
+        if (user.oauthId !== undefined) {
+            updates.push(`oauthId = @param${paramIndex++}`);
+            values.push(user.oauthId);
+        }
+        if (user.oauthProvider !== undefined) {
+            updates.push(`oauthProvider = @param${paramIndex++}`);
+            values.push(user.oauthProvider);
         }
 
         updates.push(`updatedAt = @param${paramIndex++}`);
@@ -125,6 +133,15 @@ export class SQLServerUserDAO extends UserDAO {
         const user = await this.findById(userId);
         return user?.cartItems || [];
     }
+    async findByOAuth(provider: string, oauthId: string): Promise<User | null> {
+        const results = await this.connection.query(
+            'SELECT * FROM users WHERE oauthProvider = @param0 AND oauthId = @param1',
+            [provider, oauthId]
+        );
+        if (results.length === 0) return null;
+        return this.mapToUser(results[0]);
+    }
+
 
     private mapToUser(row: any): User {
         return {
@@ -134,6 +151,8 @@ export class SQLServerUserDAO extends UserDAO {
             password: row.password,
             role: row.role,
             cartItems: JSON.parse(row.cartItems || '[]'),
+            oauthProvider: row.oauthProvider,
+            oauthId: row.oauthId,
             createdAt: row.createdAt,
             updatedAt: row.updatedAt,
         };

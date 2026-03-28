@@ -3,21 +3,23 @@ import cors from 'cors';
 import express, { Application as ExpressApp } from 'express';
 import { Server } from 'http';
 import swaggerUi from 'swagger-ui-express';
+import { initElasticsearch } from './config/elasticsearch';
 import { env } from './config/env.config';
 import { swaggerSpec } from './config/swagger';
 import { DAOFactory } from './databases/DAOFactory';
+import { esProductDAO } from './databases/implementations/elasticsearch/ElasticsearchProductDAO';
 import { MigrationManager } from './databases/migrations/MigrationManager';
 import { migrations } from './databases/migrations/index';
 import { errorHandler, notFoundHandler } from './middlewares/error.middleware';
-import { initElasticsearch } from './config/elasticsearch';
-import { esProductDAO } from './databases/implementations/elasticsearch/ElasticsearchProductDAO';
+import { rateLimit, securityHeaders } from './middlewares/security.middleware';
 import authRoutes from './routes/auth.route';
 import cartRoutes from './routes/cart.route';
 import couponRoutes from './routes/coupon.route';
 import paymentRoutes from './routes/payment.route';
 import productRoutes from './routes/product.route';
-import { securityHeaders, rateLimit } from './middlewares/security.middleware';
 import './types/express';
+import passport from './config/passport.config';
+
 
 export class Application {
     private app: ExpressApp;
@@ -34,8 +36,9 @@ export class Application {
         this.app.use(cors({ origin: env.CLIENT_URL, credentials: true }));
         this.app.use(securityHeaders);
         this.app.use(rateLimit.global);
-        this.app.use(express.json({limit: '10mb'}));
+        this.app.use(express.json({limit: '10kb'}));
         this.app.use(cookieParser());
+        this.app.use(passport.initialize());
 
         this.app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
     }

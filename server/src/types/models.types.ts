@@ -10,6 +10,8 @@ export interface User extends BaseEntity {
     password: string;
     role: 'customer' | 'admin';
     cartItems: CartItem[];
+    oauthProvider?: "google" | "github";
+    oauthId?: string;
 }
 
 export interface CartItem {

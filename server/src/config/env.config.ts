@@ -32,5 +32,11 @@ export const env = {
     REDIS_PORT: Number(process.env.REDIS_PORT || 6379),
     ELASTICSEARCH_URL: process.env.ELASTICSEARCH_URL,
     // ELASTICSEARCH_API_KEY: process.env.ELASTICSEARCH_API_KEY,
+    
     ARCJET_KEY: process.env.ARCJET_KEY,
+
+    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+    GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID,
+    GITHUB_CLIENT_SECRET: process.env.GITHUB_CLIENT_SECRET,
 };

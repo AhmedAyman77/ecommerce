@@ -10,7 +10,7 @@ import { env } from './env.config';
 
 
 export const esClient = new Client({
-    node: env.ELASTICSEARCH_URL
+    node: env.ELASTICSEARCH_railWay_URL
 });
 
 export async function initElasticsearch(): Promise<void> {

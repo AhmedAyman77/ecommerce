@@ -13,6 +13,7 @@ export const env = {
     SQL_TYPE: process.env.SQL_TYPE || 'sqlite',
     
     SQLITE_DB_PATH: process.env.SQLITE_DB_PATH || "./database.sqlite",
+    SQLITE_CONNECTION_STRING: process.env.SQLITE_CONNECTION_STRING,
     
     SQLSERVER_HOST: process.env.SQLSERVER_HOST,
     SQLSERVER_DATABASE: process.env.SQLSERVER_DATABASE,
@@ -30,8 +31,11 @@ export const env = {
     REDIS_PASSWORD: process.env.REDIS_PASSWORD,
     REDIS_HOST: process.env.REDIS_HOST,
     REDIS_PORT: Number(process.env.REDIS_PORT || 6379),
+
+
     ELASTICSEARCH_URL: process.env.ELASTICSEARCH_URL,
-    // ELASTICSEARCH_API_KEY: process.env.ELASTICSEARCH_API_KEY,
+    ELASTICSEARCH_railWay_URL: process.env.ELASTICSEARCH_railWay_URL,
+    ELASTICSEARCH_API_KEY: process.env.ELASTICSEARCH_API_KEY,
     
     ARCJET_KEY: process.env.ARCJET_KEY,
 

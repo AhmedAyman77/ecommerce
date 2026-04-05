@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { LogIn, Mail, Lock, ArrowRight, Loader } from 'lucide-react';
 import { useUserStore } from '../stores/useUserStore';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = `${import.meta.env.VITE_API_URL}/api` || 'http://localhost:5000/api';
 
 const LoginPage = () => {
 	const [email, setEmail] = useState('');
